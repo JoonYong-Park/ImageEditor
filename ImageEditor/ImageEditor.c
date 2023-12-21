@@ -1,84 +1,97 @@
-#define _CRT_SECURE_NO_WARNINGS // fopen º¸¾È °æ°í·Î ÀÎÇÑ ÄÄÆÄÀÏ ¿¡·¯ ¹æÁö
+ï»¿#define _CRT_SECURE_NO_WARNINGS // fopen ë³´ì•ˆ ê²½ê³ ë¡œ ì¸í•œ ì»´íŒŒì¼ ì—ëŸ¬ ë°©ì§€
 #include <stdio.h>
-#include <conio.h>              // (_getch)È­¸é¿¡¼­ Å° ÀÔ·ÂÀ» Ã³¸®ÇÏ±â À§ÇØ »ç¿ëµÇ´Â Çì´õ ÆÄÀÏ
-#include <windows.h>            // ±ÛÀÚ »ö»ó º¯°æÀ» À§ÇØ »ç¿ëµÇ´Â Çì´õ ÆÄÀÏ
-#pragma warning(disable:4996)   // °æ°í ¸Ş½ÃÁö 4996À» ¹«½ÃÇÏ´Â pragma Áö½Ã¹®
-
+#include <conio.h>              // í‚¤ ì…ë ¥ì„ ì²˜ë¦¬
+#include <windows.h>            // ê¸€ì ìƒ‰ìƒ ë³€ê²½
+#include "ConversionFile.h"     // RAW íŒŒì¼ì„ JPG íŒŒì¼ë¡œ ë³€í™˜
+//#include <png.h>
+#pragma warning(disable:4996)   // ê²½ê³  ë©”ì‹œì§€ 4996ì„ ë¬´ì‹œí•˜ëŠ” pragma ì§€ì‹œë¬¸
 #define W 256
 #define H 256
 
-// ÆÄÀÏ ÀÌ¸§
+FILE* fp; 
 char readFile[100];
 char writeFile[100];
+int cnt = 0;
 
-// ÆÄÀÏ Æ÷ÀÎÅÍ
-FILE* fp; 
-
-// ¿µ»ó µ¥ÀÌÅÍ¸¦ ÀúÀåÇÒ ¹è¿­
+// ì˜ìƒ ë°ì´í„°ë¥¼ ì €ì¥í•  ë°°ì—´
 unsigned char Readbuf[256][256];  
 unsigned char Writebuf[256][256]; 
 
-// »ç¿ëÀÚ Á¤ÀÇ ÇÔ¼ö ¼±¾ğ
-void setColor();          // ±ÛÀÚ »ö»ó º¯°æ
-void open();              // ¿µ»ó ÀĞ±â
-void save();              // ¿µ»ó ÀúÀå
-void LeftRight();         // ÁÂ¿ì ¹İÀü
-void UpDown();            // »óÇÏ ¹İÀü
-void light();             // ¹à°Ô
-void dark();              // ¾îµÓ°Ô
-void zoomIn();            // È®´ë
-void zoomOut();           // Ãà¼Ò
-void noise();             // ³ëÀÌÁî Á¦°Å
-void binarization();      // ÀÌÁøÈ­
-
+// ì‚¬ìš©ì ì •ì˜ í•¨ìˆ˜ ì„ ì–¸
+void setColor();          // ê¸€ì ìƒ‰ìƒ ë³€ê²½
+void open();              // ì˜ìƒ ì½ê¸°
+void save();              // ì˜ìƒ ì €ì¥
+void save2();             // ì˜ìƒ ì €ì¥2 - ì´ë¯¸ì§€ íŒŒì¼ ë³€í™˜(ì—ëŸ¬)
+void LeftRight();         // ì¢Œìš° ë°˜ì „
+void UpDown();            // ìƒí•˜ ë°˜ì „
+void light();             // ë°ê²Œ
+void dark();              // ì–´ë‘¡ê²Œ
+void zoomIn();            // í™•ëŒ€
+void zoomOut();           // ì¶•ì†Œ
+void noise();             // ë…¸ì´ì¦ˆ ì œê±°
+void binarization();      // ì´ì§„í™”
+void edge();              // ì—£ì§€ ê²€ì¶œ
+void imageEditor_Print();       // ë©”ë‰´ ì„ íƒ
+void thankYou_Print();          // ì¢…ë£Œ
 
 int main() {
-    int color = 1; 
-    int choice = 0;             // ¸Ş´º ¼±ÅÃÀ» ÀúÀåÇÏ´Â º¯¼ö
-    
-    setColor(color);
-    printf("ÆíÁıÇÒ ÀÌ¹ÌÁöÀÇ ÀÌ¸§À» ÀÔ·ÂÇÏ½Ã¿À: ");
-    scanf("%s", readFile);
+    int choice = 0;             // ë©”ë‰´
 
+    imageEditor_Print();
+    setColor(2);
+    
+    printf("[1] í¸ì§‘í•  íŒŒì¼ëª…ì„ ì…ë ¥í•˜ì‹œì˜¤: ");
+    scanf("%s", readFile);
+    strcat(readFile, ".raw");   // íŒŒì¼ ì´ë¦„ì— .raw í™•ì¥ì ì¶”ê°€
     open();
 
-    while (1) {                 // ¹«ÇÑ ·çÇÁ: °ÔÀÓ ¸Ş´º¸¦ °è¼Ó Ç¥½ÃÇÏ°í »ç¿ëÀÚ ÀÔ·ÂÀ» Ã³¸®ÇÕ´Ï´Ù.
-        setColor(color++);
-        if(color == 16) color = 1;
-        system("cls");          // È­¸éÀ» Áö¿ì°í ¸Ş´º¸¦ ´Ù½Ã Ãâ·ÂÇÕ´Ï´Ù. (Windows È¯°æ¿¡¼­ »ç¿ë)
+    while (1) {                 // ë¬´í•œ ë£¨í”„: ê²Œì„ ë©”ë‰´ë¥¼ ê³„ì† í‘œì‹œí•˜ê³  ì‚¬ìš©ì ì…ë ¥ì„ ì²˜ë¦¬í•©ë‹ˆë‹¤.
+        system("cls");          // í™”ë©´ì„ ì§€ìš°ê³  ë©”ë‰´ë¥¼ ë‹¤ì‹œ ì¶œë ¥í•©ë‹ˆë‹¤. (Windows í™˜ê²½ì—ì„œ ì‚¬ìš©)
+        imageEditor_Print();
+        if (cnt != 0) {
+            setColor(14); 
+            printf("(ì‘ì—… ì™„ë£Œ : %d)\n", cnt);
+        }
+        setColor(10);
+        printf("[1] í¸ì§‘í•  íŒŒì¼ëª…ì„ ì…ë ¥í•˜ì‹œì˜¤: %s\n\n",readFile);
+        setColor(15);
 
-        printf("ÆíÁıÇÒ ÀÌ¹ÌÁöÀÇ ÀÌ¸§À» ÀÔ·ÂÇÏ½Ã¿À: %s\n\n",readFile);
+        printf("     ---[í¸ì§‘ ë‚´ìš© ì„ íƒ]---\n");
+        if (choice == 0) printf("     |->  1. ì¢Œìš° ë°˜ì „    |\n"); // í˜„ì¬ ì„ íƒëœ í•­ëª©ì— í™”ì‚´í‘œ í‘œì‹œ
+        else printf("     |    1. ì¢Œìš° ë°˜ì „    |\n");
+        if (choice == 1) printf("     |->  2. ìƒí•˜ ë°˜ì „    |\n");
+        else printf("     |    2. ìƒí•˜ ë°˜ì „    |\n");
+        if (choice == 2) printf("     |->  3. ë°ê²Œ         |\n");
+        else printf("     |    3. ë°ê²Œ         |\n");
+        if (choice == 3) printf("     |->  4. ì–´ë‘¡ê²Œ       |\n");
+        else printf("     |    4. ì–´ë‘¡ê²Œ       |\n");
+        if (choice == 4) printf("     |->  5. í™•ëŒ€         |\n");
+        else printf("     |    5. í™•ëŒ€         |\n");
+        if (choice == 5) printf("     |->  6. ì¶•ì†Œ         |\n");
+        else printf("     |    6. ì¶•ì†Œ         |\n");
+        if (choice == 6) printf("     |->  7. í‘ë°±         |\n");
+        else printf("     |    7. í‘ë°±         |\n");
+        if (choice == 7) printf("     |->  8. ì—£ì§€ê²€ì¶œ     |\n");
+        else printf("     |    8. ì—£ì§€ê²€ì¶œ     |\n");
+        if (choice == 8) printf("     |->  9. ë…¸ì´ì¦ˆ ì œê±°  |\n");
+        else printf("     |    9. ë…¸ì´ì¦ˆ ì œê±°  |\n");
+        if (choice == 9) printf("     |-> 10. ë‹¤ì‹œ ì…ë ¥    |\n");  
+        else printf("     |   10. ë‹¤ì‹œ ì…ë ¥    |\n");
+        if (choice == 10) printf("     |-> 11. ì¢…ë£Œ         |\n");
+        else printf("     |   11. ì¢…ë£Œ         |\n");
 
-        printf("--[ÆíÁı ³»¿ë ¼±ÅÃ]--\n");
-        if (choice == 0) printf("|-> 1. ÁÂ¿ì ¹İÀü   |\n"); // ÇöÀç ¼±ÅÃµÈ Ç×¸ñ¿¡ È­»ìÇ¥ Ç¥½Ã
-        else printf("|   1. ÁÂ¿ì ¹İÀü   |\n");
-        if (choice == 1) printf("|-> 2. »óÇÏ ¹İÀü   |\n");
-        else printf("|   2. »óÇÏ ¹İÀü   |\n");
-        if (choice == 2) printf("|-> 3. ¹à°Ô        |\n");
-        else printf("|   3. ¹à°Ô        |\n");
-        if (choice == 3) printf("|-> 4. ¾îµÓ°Ô      |\n");
-        else printf("|   4. ¾îµÓ°Ô      |\n");
-        if (choice == 4) printf("|-> 5. È®´ë        |\n");
-        else printf("|   5. È®´ë        |\n");
-        if (choice == 5) printf("|-> 6. Ãà¼Ò        |\n");
-        else printf("|   6. Ãà¼Ò        |\n");
-        if (choice == 6) printf("|-> 7. ³ëÀÌÁî Á¦°Å |\n");
-        else printf("|   7. ³ëÀÌÁî Á¦°Å |\n");
-        if (choice == 7) printf("|-> 8. ÀÌÁøÈ­      |\n");
-        else printf("|   8. ÀÌÁøÈ­      |\n");
-        if (choice == 8) printf("|-> 9. Á¾·á        |\n");
-        else printf("|   9. Á¾·á        |\n");
-        printf("--------------------\n");
-        int key = _getch();                      // Å° ÀÔ·ÂÀ» ¹Ş½À´Ï´Ù. »ç¿ëÀÚ°¡ ´©¸¥ Å°ÀÇ ¾Æ½ºÅ° ÄÚµå¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
-        if (key == 224) {                        // ¹æÇâÅ° ÀÔ·Â
-            key = _getch();                      // È®Àå Å° ÀÔ·ÂÀ» ´Ù½Ã ¹Ş½À´Ï´Ù.
-            if (key == 72 && choice > 0)         // UP È­»ìÇ¥ Å°¸¦ ´©¸£°í ÇöÀç ¼±ÅÃÀÌ 0º¸´Ù Å©¸é
+        printf("     ----------------------\n");
+
+        int key = _getch();                      // í‚¤ ì…ë ¥ì„ ë°›ìŠµë‹ˆë‹¤. ì‚¬ìš©ìê°€ ëˆ„ë¥¸ í‚¤ì˜ ì•„ìŠ¤í‚¤ ì½”ë“œë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
+        if (key == 224) {                        // ë°©í–¥í‚¤ ì…ë ¥
+            key = _getch();                      // í™•ì¥ í‚¤ ì…ë ¥ì„ ë‹¤ì‹œ ë°›ìŠµë‹ˆë‹¤.
+            if (key == 72 && choice > 0)         // UP í™”ì‚´í‘œ í‚¤ë¥¼ ëˆ„ë¥´ê³  í˜„ì¬ ì„ íƒì´ 0ë³´ë‹¤ í¬ë©´
                 choice--;
-            else if (key == 80 && choice < 8)    // DOWN È­»ìÇ¥ Å°¸¦ ´©¸£°í ÇöÀç ¼±ÅÃÀÌ 1º¸´Ù ÀÛÀ¸¸é
+            else if (key == 80 && choice < 10)    // DOWN í™”ì‚´í‘œ í‚¤ë¥¼ ëˆ„ë¥´ê³  í˜„ì¬ ì„ íƒì´ 1ë³´ë‹¤ ì‘ìœ¼ë©´
                 choice++;
         }
-
-        else if (key == 13) {                    // EnterÅ° ÀÔ·Â 
+        
+        else if (key == 13) {                    // Enterí‚¤ ì…ë ¥ 
             if (choice == 0) {
                 LeftRight();
             }
@@ -98,16 +111,27 @@ int main() {
 				zoomOut();
 			}
 			else if (choice == 6) {
-			    noise();
-			}
-			else if (choice == 7) {
 				binarization();
 			}
-            else if (choice == 8) {
-                printf("\n!!ÀÌ¿ëÇØ ÁÖ¼Å¼­ °¨»çÇÕ´Ï´Ù!!\n");
-                return 0;
+			else if (choice == 7) {
+				edge();
+			}
+			else if (choice == 8) {
+			    noise();
+			}
+            else if (choice == 9) {
+                setColor(10);
+                printf("\n[1] í¸ì§‘í•  íŒŒì¼ëª…ì„ ì…ë ¥í•˜ì‹œì˜¤: ");
+				scanf("%s", readFile);
+                strcat(readFile, ".raw");   // íŒŒì¼ ì´ë¦„ì— .raw í™•ì¥ì ì¶”ê°€
+				open();
             }
-            printf("ÀúÀå µÇ¾ú½À´Ï´Ù.");
+			else if (choice == 10) {
+                setColor(9);
+                thankYou_Print();
+                return 0;
+			}
+
         }
     }
 }
@@ -115,30 +139,73 @@ void setColor(int color) {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
 void open() {
-    // ¿µ»ó Ãëµæ
+    // ì˜ìƒ ì·¨ë“
     fp = fopen(readFile, "rb");
-    for (int i = 0; i < 256; i++) {
-        fread(Readbuf[i], 1, W * H, fp);   //	(ÀúÀåÇÒ ÁÖ¼Ò, µ¥ÀÌÅÍ Å©±â, µ¥ÀÌÅÍ °³¼ö, ÆÄÀÏÆ÷ÀÎÅÍ)
-    }							    	 // ÆÄÀÏ¿¡¼­ µ¥ÀÌÅÍ ÀĞ¾î¿Í Readbuf ¹è¿­¿¡ ÀúÀå
-    fclose(fp); // ÆÄÀÏ ´İ±â
+    // íŒŒì¼ ì´ë¦„ì„ ì˜ëª» ì…ë ¥ í–ˆì„ë•Œ
+    if (fp == NULL) {
+        setColor(12);
+        printf("%s - íŒŒì¼ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤\n\n", readFile);
+        setColor(10);
+        printf("[1] í¸ì§‘í•  íŒŒì¼ëª…ì„ ì…ë ¥í•˜ì‹œì˜¤: ");
+        scanf("%s", readFile);
+        strcat(readFile, ".raw");   // íŒŒì¼ ì´ë¦„ì— .raw í™•ì¥ì ì¶”ê°€
+       open();
+    }
+
+    for (int i = 0; i < 256; i++) {     
+        fread(Readbuf[i], 1, 256, fp);   //	(ì €ì¥í•  ì£¼ì†Œ, ë°ì´í„° í¬ê¸°, ë°ì´í„° ê°œìˆ˜, íŒŒì¼í¬ì¸í„°)
+    }							    	 // íŒŒì¼ì—ì„œ ë°ì´í„° ì½ì–´ì™€ Readbuf ë°°ì—´ì— ì €ì¥
+    fclose(fp); // íŒŒì¼ ë‹«ê¸°
 }
 void save() {
-    // ¿µ»ó ÀúÀå
-    printf("ÀúÀåÇÒ ÆÄÀÏ ÀÌ¸§À» ÀÔ·ÂÇÏ½Ã¿À: ");
+    // ì˜ìƒ ì €ì¥
+    setColor(10);
+    printf("\n[2] ì €ì¥ë  íŒŒì¼ëª…ì„ ì…ë ¥í•˜ì‹œì˜¤: ");
     scanf("%s", writeFile);
 
-    fp = fopen(writeFile, "wb"); // ÆÄÀÏÀ» ¾²±â ¸ğµå·Î ¿­±â
+    strcat(writeFile, ".raw");   // íŒŒì¼ ì´ë¦„ì— .raw í™•ì¥ì ì¶”ê°€
+
+    fp = fopen(writeFile, "wb"); // íŒŒì¼ì„ ì“°ê¸° ëª¨ë“œë¡œ ì—´ê¸°
 
     for (int i = 0; i < 256; i++)
-        fwrite(Writebuf[i], 1, 256, fp); // Writebuf ¹è¿­ÀÇ µ¥ÀÌÅÍ¸¦ ÆÄÀÏ¿¡ ¾²±â
-    fclose(fp); // ÆÄÀÏ ´İ±â
+        fwrite(Writebuf[i], 1, 256, fp); // Writebuf ë°°ì—´ì˜ ë°ì´í„°ë¥¼ íŒŒì¼ì— ì“°ê¸°
+    fclose(fp); // íŒŒì¼ ë‹«ê¸°
+
+    cnt++;
 }
+
+//void save2() {
+//    // ì˜ìƒ ì €ì¥
+//    printf("ì €ì¥í•  íŒŒì¼ ì´ë¦„ì„ ì…ë ¥í•˜ì‹œì˜¤: ");
+//    scanf("%s", writeFile);
+//
+//    fp = fopen(writeFile, "wb"); // íŒŒì¼ì„ ì“°ê¸° ëª¨ë“œë¡œ ì—´ê¸°
+//
+//    for (int i = 0; i < 256; i++)
+//        fwrite(Writebuf[i], 1, 256, fp); // Writebuf ë°°ì—´ì˜ ë°ì´í„°ë¥¼ íŒŒì¼ì— ì“°ê¸°
+//    fclose(fp); // íŒŒì¼ ë‹«ê¸°
+//
+//    // RAWë¥¼ JPGë¡œ ë³€í™˜
+//    unsigned char* jpg_data = convert_raw_to_jpg(Writebuf, 256, 256, 3);
+//
+//    // JPG íŒŒì¼ ì €ì¥
+//    FILE* jpg_fp = fopen(writeFile, "wb");
+//    if (jpg_fp == NULL) {
+//        printf("JPG íŒŒì¼ì„ ìƒì„±í•˜ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.\n");
+//        return;
+//    }
+//
+//    fwrite(jpg_data, 256 * 256 * 3, 1, jpg_fp);
+//    fclose(jpg_fp);
+//
+//    free(jpg_data);
+//}
 
 void LeftRight() {
 
     for (int i = 0; i < 256; i++)
         for (int j = 0; j < 256; j++)
-            Writebuf[j][i] = Readbuf[j][256 - i]; // ÁÂ ¿ì µÚÁı±â
+            Writebuf[j][i] = Readbuf[j][256 - i]; // ì¢Œ ìš° ë’¤ì§‘ê¸°
 
     save();
 }
@@ -147,27 +214,20 @@ void UpDown() {
 
     for (int i = 0; i < 256; i++)
         for (int j = 0; j < 256; j++)
-            Writebuf[j][i] = Readbuf[256 - j][i]; // »ó ÇÏ µÚÁı±â
-    //Writebuf[j][i] = Readbuf[255 - j][255 - i]; // »óÇÏÁÂ¿ì µÚÁı±â
+            Writebuf[j][i] = Readbuf[256 - j][i]; // ìƒ í•˜ ë’¤ì§‘ê¸°
+    //Writebuf[j][i] = Readbuf[255 - j][255 - i]; // ìƒí•˜ì¢Œìš° ë’¤ì§‘ê¸°
 
     save();
 }
 void light() {
-
-   
     for (int i = 0; i < 256; i++) {
         for (int j = 0; j < 256; j++) {
-            
-            printf("%d\t", Readbuf[i][j]);
             if (Readbuf[i][j] >= 225) {
                 Writebuf[i][j] = 255;
-                printf("¹àÀº»ö");
             }
-
             else {
                 Writebuf[i][j] = Readbuf[i][j] + 30;
             }
-
         }
     }
     save();
@@ -177,11 +237,8 @@ void dark() {
 
     for (int i = 0; i < 256; i++) {
         for (int j = 0; j < 256; j++) {
-
-            
             if (Readbuf[i][j] < 30) {
                 Writebuf[i][j] = 0;
-                printf("¾îµÎ¿î»ö");
             }
             else {
                 Writebuf[i][j] = Readbuf[i][j] - 30;
@@ -223,7 +280,7 @@ void zoomOut() {
 }
 
 void noise() {
-    // ¸Şµğ¾È ÇÊÅÍ: 3x3
+    // ë©”ë””ì•ˆ í•„í„°: 3x3
     for (int i = 1; i < 255; i++) {
         for (int j = 1; j < 255; j++) {
             unsigned char temp[9] = { 0 };
@@ -255,10 +312,10 @@ void noise() {
 
 void binarization() {
 
-    // ÀÓ°è°ª ¼³Á¤ : °¢ ÇÈ¼¿ÀÇ ¹à±â °ªÀÌ ±× ÀÓ°è°ªº¸´Ù Å©¸é 1(¶Ç´Â Èò»ö), ÀÛÀ¸¸é 0(¶Ç´Â °ËÀº»ö)À¸·Î º¯È¯
+    // ì„ê³„ê°’ ì„¤ì • : ê° í”½ì…€ì˜ ë°ê¸° ê°’ì´ ê·¸ ì„ê³„ê°’ë³´ë‹¤ í¬ë©´ 1(ë˜ëŠ” í°ìƒ‰), ì‘ìœ¼ë©´ 0(ë˜ëŠ” ê²€ì€ìƒ‰)ìœ¼ë¡œ ë³€í™˜
     int T = 100;
 
-    // ¿µ»óÀÌÁøÈ­ : 0°ú 1 ¶Ç´Â °ËÀº»ö°ú Èò»öÀ¸·Î ³ª´©´Â °úÁ¤
+    // ì˜ìƒì´ì§„í™” : 0ê³¼ 1 ë˜ëŠ” ê²€ì€ìƒ‰ê³¼ í°ìƒ‰ìœ¼ë¡œ ë‚˜ëˆ„ëŠ” ê³¼ì •
     for (int i = 0; i < 256; i++){
         for (int j = 0; j < 256; j++) {
             if (Readbuf[i][j] < T) {
@@ -280,4 +337,49 @@ void binarization() {
         }
     }*/
 	save();
+}
+
+void edge() {
+    // ì†Œë²¨ ë§ˆìŠ¤í¬
+	int maskX[3][3] = { {-1,0,1},{-2,0,2},{-1,0,1} };
+	int maskY[3][3] = { {-1,-2,-1},{0,0,0},{1,2,1} };
+	int Gx, Gy, sum;
+    for (int y = 1; y < 255; y++) {
+        for (int x = 1; x < 255; x++) {
+            Gx = 0;
+            Gy = 0;
+            for (int k = -1; k <= 1; k++) {
+                for (int j = -1; j <= 1; j++) {
+                    Gx += Readbuf[y + j][x + k] * maskX[j + 1][k + 1];
+                    Gy += Readbuf[y + j][x + k] * maskY[j + 1][k + 1];
+                }
+            }
+            sum = abs(Gx) + abs(Gy);
+            if (sum > 255) sum = 255;
+            if (sum < 0) sum = 0;
+            Writebuf[y][x] = sum;
+        }
+    }
+	save();
+}
+void imageEditor_Print() {
+    setColor(9);
+    printf("|''||''|                                     '||''''|     ||`        ||                  \n"
+           "   ||                                         ||   .      ||   ''    ||                  \n"
+           "   ||    '||),,(|,   '''|.  .|''|, .|''|,     ||'''|  .|''||   ||  ''||''  .|''|, '||''| \n"
+           "   ||     || || ||  .|''||  ||  || ||..||     ||      ||  ||   ||    ||    ||  ||  ||    \n"
+           "|..||..| .||    ||. `|..||. `|..|| `|...     .||....| `|..||. .||.   `|..' `|..|' .||.   \n"
+           "                                ||                                                       \n"
+           "                             `..|'                                                       \n\n");
+}
+void thankYou_Print() {
+    setColor(9);
+    printf("\n|''||''| '||                      '||                                      \n"
+             "   ||     ||                       ||                                      \n"
+             "   ||     ||''|,  '''|.  `||''|,   || //`     '||  ||` .|''|, '||  ||`     \n"
+             "   ||     ||  || .|''||   ||  ||   ||<<        `|..||  ||  ||  ||  ||      \n"
+             "  .||.   .||  || `|..||. .||  ||. .|| \\\\          ||   `|..|'  `|..'|. .. \n"
+             "                                                ,  |'                      \n"
+             "                                                 ''                        \n");
+    setColor(15);
 }

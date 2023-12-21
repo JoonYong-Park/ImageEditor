@@ -127,7 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Jpg_Transformation.cpp" />
+    <ClCompile Include="ConversionFiles.c" />
     <ClCompile Include="ImageEditor.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ConversionFile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
